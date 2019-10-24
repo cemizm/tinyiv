@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:TinyIV.App.ViewModels;assembly=TinyIV.App" xmlns:ctrl="clr-namespace:TinyIV.App.Controls;assembly=TinyIV.App" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:oxy="http://oxyplot.org/avalonia" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="TinyIV.App.Views.MainWindow" Icon="/Assets/avalonia-logo.ico" MinWidth="1000" MinHeight="800" Title="TinyIV">
+    <Window.Styles>
+        <Style Selector="TextBox.SevenSegment">
+            <Setter Property="FontSize" Value="25"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Background" Value="black"/>
+            <Setter Property="Foreground" Value="green"/>
+            <Setter Property="Padding" Value="20,5"/>
+            <Setter Property="IsReadOnly" Value="true"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="TextAlignment" Value="center"/>
+            <Setter Property="Width" Value="160"/>
+        </Style>
+        <Style Selector="TextBox.Limit">
+            <Setter Property="TextAlignment" Value="center"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Width" Value="60"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="TextBlock.Title">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,10,0,5"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="NumericUpDown">
+            <Setter Property="TextBox.Padding" Value="7"/>
+            <Setter Property="TextBox.TextAlignment" Value="Center"/>
+            <Setter Property="TextBox.FontSize" Value="12"/>
+            <Setter Property="TextBox.FontWeight" Value="Bold"/>
+        </Style>
+    </Window.Styles>
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+    <Grid ColumnDefinitions="80,*,100" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,100" Margin="10"><!-- Geräteauswahl -->
+        <TextBlock Text="Model" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Margin="3"/>
+        <ComboBox Items="{Binding PowerSupplies}" SelectedItem="{Binding PowerSupply}" Grid.Row="0" Grid.Column="1" MinHeight="25" Margin="3" IsEnabled="{Binding !IsOpen}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding AdapterName}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBlock Text="Anschluss" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Margin="3"/>
+        <ComboBox Items="{Binding Ports}" SelectedItem="{Binding Port}" Grid.Row="1" Grid.Column="1" MinHeight="25" Margin="3" IsEnabled="{Binding !IsOpen}"/>
+        <Button Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Margin="3" Command="{Binding Connect}" Content="{Binding ConnectText}"/><!-- Messungen -->
+        <TextBlock Classes="Title" Text="Messung" Grid.Row="2" Grid.ColumnSpan="3"/>
+        <Grid Grid.Row="3" Grid.ColumnSpan="3" ColumnDefinitions="Auto,Auto,Auto,*,*,100" RowDefinitions="Auto,Auto,Auto" IsEnabled="{Binding IsOpen}"><!-- Anzeige Ist-Werte -->
+            <TextBlock Classes="Title" FontSize="12" Text="Ist-Werte" Grid.Row="0" Grid.Column="0"/>
+            <TextBox Classes="SevenSegment" FontFamily="Inconsolata,Consolas,Monospace,Courier" Text="{Binding VoltageSet}" Margin="3" Grid.Row="1" Grid.Column="0"/>
+            <TextBox Classes="SevenSegment" FontFamily="Inconsolata,Consolas,Monospace,Courier" Text="{Binding CurrentSet}" Margin="3" Grid.Row="2" Grid.Column="0"/><!-- Anzeige Soll-Werte -->
+            <TextBlock Classes="Title" FontSize="12" Text="Soll-Werte" Grid.Row="0" Grid.Column="1"/>
+            <TextBox Classes="SevenSegment" FontFamily="Inconsolata,Consolas,Monospace,Courier" Text="{Binding Voltage}" Margin="3" Grid.Row="1" Grid.Column="1"/>
+            <TextBox Classes="SevenSegment" FontFamily="Inconsolata,Consolas,Monospace,Courier" Text="{Binding Current}" Margin="3" Grid.Row="2" Grid.Column="1"/><!-- Limits -->
+            <TextBlock Classes="Title" FontSize="12" Text="Limits" Grid.Row="0" Grid.Column="2"/>
+            <NumericUpDown Value="{Binding VoltageLimit}" Increment="0.1" Minimum="0" Maximum="1000" FormatString="{}{0:0.0} V" Width="90" Margin="3" Grid.Row="1" Grid.Column="2" IsEnabled="{Binding !IsActive}"/>
+            <NumericUpDown Value="{Binding CurrentLimit}" Increment="0.1" Minimum="0" Maximum="20" FormatString="{}{0:0.0} A" Width="90" Margin="3" Grid.Row="2" Grid.Column="2" IsEnabled="{Binding !IsActive}"/><!-- Konfiguration Messung -->
+            <TextBlock Classes="Title" FontSize="12" Text="Intervall" Grid.Row="0" Grid.Column="3"/>
+            <NumericUpDown Value="{Binding Interval}" Increment="1" Minimum="0" Maximum="60" FormatString="{}{0:0} Minuten" Grid.Row="1" Grid.Column="3" Margin="3" IsEnabled="{Binding !IsActive}"/>
+            <TextBlock Classes="Title" FontSize="12" Text="Nächste Nr." Grid.Row="0" Grid.Column="4"/>
+            <NumericUpDown Value="{Binding Next}" Increment="1" Minimum="1" Maximum="9999" Margin="3" Grid.Row="1" Grid.Column="4" IsEnabled="{Binding !IsActive}"/>
+            <Grid Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="2" ColumnDefinitions="*, Auto" IsEnabled="{Binding !IsActive}">
+                <TextBox Text="{Binding Filename}" Watermark="Zieldatei" IsReadOnly="true" Grid.Column="0" Margin="3,3,0,3" Padding="10"/>
+                <Button Grid.Column="1" Margin="0,3,3,3" Click="OnFileDialogButtonClick">
+                    <Image Source="/Assets/search.png" Width="20" Height="20"/>
+                </Button>
+            </Grid><!-- Run -->
+            <Button Grid.Row="1" Grid.Column="5" Grid.RowSpan="2" Margin="3" Command="{Binding StartMeasurement}" Content="{Binding MeasureText}"/>
+        </Grid><!-- Kennlinien -->
+        <TextBlock Classes="Title" Text="Kennlinien" Grid.Row="4" Grid.ColumnSpan="3"/>
+        <Grid Grid.Row="5" Grid.ColumnSpan="3" ColumnDefinitions="150,*">
+            <ListBox Grid.Column="0" Items="{Binding Measurements}" SelectedItems="{Binding SelectedMeasurements}" SelectionMode="Multiple">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <oxy:PlotView Grid.Column="1" Model="{Binding MeasurementView}"/>
+        </Grid><!-- Log Outout -->
+        <TextBlock Classes="Title" Text="Log Ausgaben" Grid.Row="6" Grid.ColumnSpan="3"/>
+        <TextBox Text="{Binding LogText}" Grid.Row="7" Grid.ColumnSpan="3"/>
+    </Grid>
+</Window>
