@@ -73,6 +73,8 @@ namespace TinyIV.Lib
             if (voltageStep < 0.1f)
                 voltageStep = 0.1f;
 
+            //float voltageStep = 0.5f;
+
             float voltageLog = (float)Math.Round(psu.VoltageLimit / 10, 1);
             float currentLog = (float)Math.Round(psu.CurrentLimit / 10, 1);
 
@@ -96,7 +98,7 @@ namespace TinyIV.Lib
 
                 gradient = curve.Last().GetGradient(p);
 
-                if ((gradient > 0 && (!last.HasValue || Math.Abs(1 - gradient / last.Value) > .15f)) ||
+                if ((gradient > 0 && (!last.HasValue || Math.Abs(1 - gradient / last.Value) > .2f)) ||
                    (p.Voltage - curve.Last().Voltage > voltageLog) ||
                    (p.Current - curve.Last().Current > currentLog))
                 {
@@ -106,12 +108,32 @@ namespace TinyIV.Lib
 
                 if (psu.Voltage < psu.VoltageLimit)
                     psu.Voltage += voltageStep;
-
-            } while (p.Voltage < (psu.Voltage * 0.95) && p.Current < (psu.Current * 0.95));
+            } while(HasChanges(measurements));
 
             SetOutput(true);
 
             return curve;
+        }
+
+        private bool HasChanges(List<IVPair> measurements)
+        {
+            if(measurements.Count < 20)
+                return true;
+
+            IVPair last = measurements.FirstOrDefault();
+            IVPair avg;
+            var tmp = measurements.Take(20);
+
+            avg.Current = tmp.Sum(a => a.Current) / tmp.Count();
+            avg.Voltage = tmp.Sum(a => a.Voltage) / tmp.Count();
+
+            if (Math.Abs(last.Current - avg.Current) > 0.05)
+                return true;
+
+            if (Math.Abs(last.Voltage - avg.Voltage) > 0.05)
+                return true;
+
+            return false;
         }
 
         private IVPair GetSmoothIV(List<IVPair> measurements)
@@ -120,13 +142,16 @@ namespace TinyIV.Lib
             OutputConstant status;
             psu.GetOutput(out p, out status);
 
+            lastMeasure = p;
+
             measurements.Insert(0, p);
-            var tmp = measurements.Take(1);
+            if(measurements.Count < 10)
+                return measurements.Last();
+
+            var tmp = measurements.Take(10);
 
             p.Current = tmp.Sum(a => a.Current) / tmp.Count();
             p.Voltage = tmp.Sum(a => a.Voltage) / tmp.Count();
-
-            lastMeasure = p;
 
             return p;
         }

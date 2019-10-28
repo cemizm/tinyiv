@@ -9,6 +9,8 @@ namespace TinyIV.Lib
         public float Voltage;
         public float Current;
 
+        public float Watt { get { return Voltage * Current; } }
+
         public float GetGradient(IVPair point)
         {
             return (Current - point.Current) / (Voltage - point.Voltage);
